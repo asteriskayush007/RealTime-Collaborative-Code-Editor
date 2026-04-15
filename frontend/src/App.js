@@ -29,6 +29,7 @@ function App() {
       .then(setUser)
       .catch(() => setUser(null));
   }, []);
+  console.log(repo);
 
   // 🔥 CTRL + ` toggle output
   useEffect(() => {
