@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+/* ---------- AUTH PAGE ---------- */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.auth-wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ---------- AUTH CARD ---------- */
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+.auth-card h2 {
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.auth-card p {
+  margin: 0 0 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ---------- INPUTS ---------- */
+
+.auth-card input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.auth-card input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+/* ---------- BUTTON ---------- */
+
+.primary-btn {
+  width: 100%;
+  padding: 12px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  background: #4f46e5;
+}
+
+/* ---------- TABS ---------- */
+
+.auth-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #475569;
+}
+
+.auth-tab.active {
+  background: #ffffff;
+  color: #111827;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 22px;
+  }
+}
