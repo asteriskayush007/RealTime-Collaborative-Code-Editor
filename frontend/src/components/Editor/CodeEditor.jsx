@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import axios from "axios";
 
 // ✅ SINGLE SOCKET INSTANCE
-const socket = io("http://localhost:5001");
+const socket = io("https://realtime-collaborative-code-editor-mvpt.onrender.com/");
 
 // ✅ LANGUAGE MAP
 const LANGUAGES = {
