@@ -3,9 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 
-// ✅ SINGLE SOCKET INSTANCE
-const socket = io("https://realtime-collaborative-code-editor-mvpt.onrender.com/");
-
 // ✅ LANGUAGE MAP
 const LANGUAGES = {
   javascript: 63,
@@ -29,11 +26,24 @@ export default function CodeEditor({
   repoId,
   setOutput,
 }) {
+  const socketRef = useRef(null);
   const isRemoteUpdate = useRef(false);
 
   const [language, setLanguage] = useState("javascript");
 
-  // ✅ AUTO LANGUAGE DETECT FROM FILE NAME
+  // ✅ SOCKET CONNECT (ONCE)
+  useEffect(() => {
+    socketRef.current = io(
+      "https://realtime-collaborative-code-editor-mvpt.onrender.com",
+      { transports: ["websocket"] }
+    );
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, []);
+
+  // ✅ AUTO LANGUAGE DETECT
   useEffect(() => {
     if (!activeFile) return;
 
@@ -43,22 +53,21 @@ export default function CodeEditor({
     else setLanguage("javascript");
   }, [activeFile]);
 
-  // ✅ BOILERPLATE ONLY IF FILE EMPTY
+  // ✅ BOILERPLATE SAFE INSERT
   useEffect(() => {
-    if (!activeFile) return;
+    if (!activeFile || !repoId) return;
 
     setFiles((prev) => {
       const existing = prev[activeFile];
 
-      // 🔥 FIX: agar file exist hi nahi karti ya empty hai
-      if (existing === undefined || existing.trim() === "") {
+      if (!existing || existing.trim() === "") {
         const updated = {
           ...prev,
           [activeFile]: DEFAULT_CODE[language],
         };
 
-        // 🔥 sync bhi bhej dena (IMPORTANT for collab)
-        socket.emit("code-change", {
+        // 🔥 sync with others
+        socketRef.current.emit("code-change", {
           repoId,
           files: updated,
         });
@@ -68,39 +77,33 @@ export default function CodeEditor({
 
       return prev;
     });
-  }, [activeFile, language]);
+  }, [activeFile, language, repoId, setFiles]);
 
   // ✅ JOIN ROOM
   useEffect(() => {
-    if (!repoId) return;
+    if (!repoId || !socketRef.current) return;
 
-    console.log("Joining room:", repoId);
+    socketRef.current.emit("join-room", repoId);
 
-    socket.emit("join-room", repoId);
-
-    socket.on("load-code", (incomingFiles) => {
-      console.log("Loaded:", incomingFiles);
-
+    socketRef.current.on("load-code", (incomingFiles) => {
       if (incomingFiles) {
         isRemoteUpdate.current = true;
         setFiles(incomingFiles);
       }
     });
 
-    socket.on("code-update", (incomingFiles) => {
-      console.log("Update:", incomingFiles);
-
+    socketRef.current.on("code-update", (incomingFiles) => {
       isRemoteUpdate.current = true;
       setFiles(incomingFiles);
     });
 
     return () => {
-      socket.off("load-code");
-      socket.off("code-update");
+      socketRef.current.off("load-code");
+      socketRef.current.off("code-update");
     };
   }, [repoId, setFiles]);
 
-  // ✅ HANDLE CHANGE (COLLAB SAFE)
+  // ✅ HANDLE CHANGE
   const handleChange = (val) => {
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
@@ -114,7 +117,7 @@ export default function CodeEditor({
 
     setFiles(updatedFiles);
 
-    socket.emit("code-change", {
+    socketRef.current.emit("code-change", {
       repoId,
       files: updatedFiles,
     });
@@ -130,7 +133,7 @@ export default function CodeEditor({
         {
           source_code: files[activeFile] || "",
           language_id: LANGUAGES[language],
-        },
+        }
       );
 
       setOutput(res.data.stdout || res.data.stderr || "No output");
@@ -142,6 +145,7 @@ export default function CodeEditor({
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      
       {/* 🔝 TOP BAR */}
       <div
         style={{
@@ -153,8 +157,8 @@ export default function CodeEditor({
           justifyContent: "space-between",
         }}
       >
-        {/* LEFT SIDE */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* LEFT */}
+        <div style={{ display: "flex", gap: "10px" }}>
           <button
             onClick={runCode}
             style={{
@@ -184,18 +188,13 @@ export default function CodeEditor({
           </select>
         </div>
 
-        {/* RIGHT SIDE 👉 FILE NAME */}
-        <div
-          style={{
-            fontWeight: "bold",
-            color: "#38bdf8",
-          }}
-        >
+        {/* RIGHT */}
+        <div style={{ fontWeight: "bold", color: "#38bdf8" }}>
           📄 {activeFile || "No File"}
         </div>
       </div>
 
-      {/* 🧠 EDITOR */}
+      {/* EDITOR */}
       <Editor
         height="100%"
         theme="vs-dark"
