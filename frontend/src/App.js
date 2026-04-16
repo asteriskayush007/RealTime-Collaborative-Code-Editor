@@ -18,31 +18,48 @@ function App() {
   const [page, setPage] = useState("login");
 
   const [repo, setRepo] = useState(null);
-  const [files, setFiles] = useState({});
+  const [files, setFiles] = useState({
+    "main.js": 'console.log("hello")',
+  });
   const [activeFile, setActiveFile] = useState("main.js");
+
   const [output, setOutput] = useState("");
   const [showOutput, setShowOutput] = useState(true);
 
-  // 🔐 AUTH CHECK
+  // 🔐 AUTH
   useEffect(() => {
     getCurrentUser()
       .then(setUser)
       .catch(() => setUser(null));
   }, []);
-  console.log(repo);
 
-  // 🔥 CTRL + ` toggle output
+  // 🌐 AUTO JOIN FROM URL
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  let repoFromURL = params.get("repo");
+
+  if (!repoFromURL) {
+    repoFromURL = Math.random().toString(36).substring(2, 8);
+
+    window.history.replaceState(null, "", `?repo=${repoFromURL}`);
+  }
+
+  setRepo(repoFromURL);
+}, []);
+
+  // ⌨️ CTRL + `
   useEffect(() => {
     const handleKey = (e) => {
       if (e.ctrlKey && e.key === "`") {
         setShowOutput((prev) => !prev);
       }
     };
+
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  // 🔥 RESIZER (CLEAN + SAFE)
+  // 🧱 RESIZER
   useEffect(() => {
     const resizer = document.querySelector(".resizer");
 
@@ -59,8 +76,7 @@ function App() {
       if (!editor || !output) return;
 
       const rect = containerRef.current.getBoundingClientRect();
-      const offsetY = e.clientY - rect.top;
-      const percent = (offsetY / rect.height) * 100;
+      const percent = ((e.clientY - rect.top) / rect.height) * 100;
 
       if (percent > 15 && percent < 85) {
         editor.style.height = `${percent}%`;
@@ -83,7 +99,6 @@ function App() {
     };
   }, []);
 
-  // 🔐 LOGIN UI
   if (!user) {
     return (
       <AuthLayout>
@@ -98,34 +113,29 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* ✅ FIX: Proper props pass */}
       <Sidebar
         files={files}
         setFiles={setFiles}
         setActiveFile={setActiveFile}
+        repo={repo}
         setRepo={setRepo}
       />
 
       <div className="main">
-        {/* 🔝 TOPBAR */}
         <div className="topbar">
           ⚡ Real-Time Code Editor
           <button onClick={signOut}>Logout</button>
         </div>
 
-        {/* 💻 EDITOR + OUTPUT */}
         <div className="editor-output-wrapper" ref={containerRef}>
           <div className="editor-pane">
             <CodeEditor
-              code={files[activeFile] || ""}
-              setCode={(val) =>
-                setFiles((prev) => ({
-                  ...prev,
-                  [activeFile]: val,
-                }))
-              }
-              setOutput={setOutput}
-            />
+  files={files}
+  setFiles={setFiles}
+  activeFile={activeFile}
+  setOutput={setOutput}
+  repoId={repo}
+/>
           </div>
 
           {showOutput && (

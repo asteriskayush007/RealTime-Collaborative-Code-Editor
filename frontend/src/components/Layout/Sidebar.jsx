@@ -1,20 +1,21 @@
 import { useState } from "react";
 
-export default function Sidebar({ files = {}, setFiles, setActiveFile }) {
+export default function Sidebar({
+  files = {},
+  setFiles,
+  setActiveFile,
+  repo,
+  repoId,
+  setRepo,
+}) {
   const [fileName, setFileName] = useState("");
 
+  // 📁 CREATE FILE
   const createFile = () => {
     const name = fileName.trim();
 
-    if (!name) {
-      alert("File name cannot be empty");
-      return;
-    }
-
-    if (files[name]) {
-      alert("File already exists");
-      return;
-    }
+    if (!name) return alert("File name cannot be empty");
+    if (files[name]) return alert("File already exists");
 
     setFiles((prev) => ({
       ...prev,
@@ -25,11 +26,39 @@ export default function Sidebar({ files = {}, setFiles, setActiveFile }) {
     setFileName("");
   };
 
+  // 🚀 CREATE REPO
+  const createRepo = () => {
+  const id = Math.random().toString(36).substring(2, 8);
+  setRepo(id);
+
+  window.location.href = `?repo=${id}`; // reload with same repo
+
+  console.log("🧠 Current Repo:", repoId);
+};
+
   return (
     <div className="sidebar">
       <h2>📁 Files</h2>
 
-      {/* INPUT */}
+      {/* 🧠 REPO CONTROLS */}
+      <button className="btn" onClick={createRepo}>
+        🚀 Create Repo
+      </button>
+
+      <button
+        className="btn"
+        onClick={() => {
+          if (!repo) return alert("Create repo first!");
+
+          const link = `${window.location.origin}?repo=${repo}`;
+          navigator.clipboard.writeText(link);
+          alert("🔗 Link copied!");
+        }}
+      >
+        🔗 Share Repo
+      </button>
+
+      {/* 📄 FILE INPUT */}
       <input
         className="file-input"
         placeholder="new file (e.g. index.js)"
@@ -38,12 +67,11 @@ export default function Sidebar({ files = {}, setFiles, setActiveFile }) {
         onKeyDown={(e) => e.key === "Enter" && createFile()}
       />
 
-      {/* BUTTON */}
       <button className="btn" onClick={createFile}>
         + Create File
       </button>
 
-      {/* FILE LIST */}
+      {/* 📂 FILE LIST */}
       <div className="file-list">
         {Object.keys(files).map((file) => (
           <div
@@ -52,18 +80,10 @@ export default function Sidebar({ files = {}, setFiles, setActiveFile }) {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
             }}
           >
-            {/* FILE NAME */}
-            <span
-              onClick={() => setActiveFile(file)}
-              style={{ cursor: "pointer" }}
-            >
-              📄 {file}
-            </span>
+            <span onClick={() => setActiveFile(file)}>📄 {file}</span>
 
-            {/* DELETE BUTTON */}
             <button
               onClick={() => {
                 const newFiles = { ...files };
@@ -73,7 +93,7 @@ export default function Sidebar({ files = {}, setFiles, setActiveFile }) {
               style={{
                 background: "transparent",
                 border: "none",
-                color: "#ef4444",
+                color: "red",
                 cursor: "pointer",
               }}
             >
